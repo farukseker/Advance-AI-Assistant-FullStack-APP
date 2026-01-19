@@ -8,7 +8,7 @@ const router = createRouter({
     {
       path: '/',
       component: DefaultLayout,
-      meta: { title: 'Manage' },
+      meta: { title: 'Chat' },
       children: [
         {
           path: '',

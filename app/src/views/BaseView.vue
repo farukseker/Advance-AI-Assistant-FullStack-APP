@@ -27,10 +27,10 @@
         <li><button type="button">Youtube</button></li> 
         <li><button type="button">Search</button></li> 
         <li><button type="button">Think</button></li> 
-        <li><button type="button">Resim Üret</button></li> 
+        <li><button type="button">Generare Image</button></li> 
         <li> 
           <details open> 
-            <summary>Modeller</summary> 
+            <summary>Models</summary> 
             <ul> 
               <li><a>Grok Fast 4.1</a></li> 
               <li><a>Gpt 4</a></li> 
