@@ -18,7 +18,11 @@ class AudioTranscriber:
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
-    def transcribe(self, audio_path: Path, prompt: str = "Please transcribe this audio file."):
+    def transcribe(
+        self,
+        audio_path: Path,
+        prompt: str = "Please transcribe this audio file. and dont give any responses about text only transcribe please"
+    ):
         base64_audio = self.__encode_audio_to_base64(audio_path)
 
         message = HumanMessage(

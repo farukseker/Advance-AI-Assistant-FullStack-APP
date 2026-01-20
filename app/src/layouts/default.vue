@@ -1,14 +1,30 @@
 <template>
     <section class="w-full flex">
-        <button v-if="!toggle_menu" class="btn btn-secondary btn-circle flex justify-center fixed z-10 top-4 left-4" @click="toggle_menu =! toggle_menu">
-            <span class="m-auto text-center">-</span>
+        <div
+            class="w-full md:w-64 fixed z-20 top-4 md:top-12 left-0 md:left-4 px-4 md:px-0"
+            :class="toggle_menu ? 'md:flex' : 'flex'"
+            @click="toggle_menu = !toggle_menu"
+        >
+        <button
+            class="btn"
+            :class="toggle_menu ? 'w-full btn-ghost':'btn-primary btn-circle shadow'"
+        >
+            <span v-if="toggle_menu">Pars</span>
+            <Icon v-else :icon="faAngleRight" />
         </button>
-        <article v-else class="absolute md:relative top-0 left-0 w-1/6 h-screen bg-base-100">
-            <button class="btn btn-ghost w-full" @click="toggle_menu =! toggle_menu">+</button>
+        </div>
+
+        <aside
+        class="fixed md:relative top-0 left-0 z-10 h-screen 
+                transition-all duration-300 overflow-hidden"
+        :class="toggle_menu
+            ? 'w-screen md:w-84 translate-x-0'
+            : 'w-0 -translate-x-full md:w-0 z-10'"
+        >
             <hr class="my-2">
             <ul 
                 tabindex="0"
-                class="menu bg-base-100 rounded-box p-2 shadow-lg mb-2 w-full"
+                class="menu bg-base-100 rounded-box p-2 shadow-lg mb-2 w-full pt-16"
             > 
                 <li>
                     <details open> 
@@ -25,12 +41,12 @@
                     <details open> 
                         <summary>History</summary> 
                         <ul> 
-                            <li><a class="bg-accent">PyTroch</a></li> 
+                            <li><a class="bg-accent">PyTorch</a></li> 
                         </ul> 
                     </details> 
                 </li>
             </ul>
-        </article>
+        </aside>
         <article class="w-full h-screen">
             <Notifications position="bottom right" :max="5" />
             <RouterView />
@@ -42,7 +58,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
-import { faEllipsis, faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsis, faBars, faChevronLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons'
 import { useThemeStore } from '@/stores/theme'
 import { Notifications } from '@kyvg/vue3-notification'
 

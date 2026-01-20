@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # from contextlib import asynccontextmanager
 
-from routers import audio_router, search_router
+from routers import audio_router, search_router, embed_router, ai_router
 
 '''
 @asynccontextmanager
@@ -28,3 +28,5 @@ app.add_middleware(
 
 app.include_router(audio_router)
 app.include_router(search_router)
+app.include_router(embed_router)
+app.include_router(ai_router)
