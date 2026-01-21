@@ -15,6 +15,11 @@ const router = createRouter({
           name: 'home',
           component: BaseView
         },
+        {
+          path:'/export',
+          name: 'export',
+          component: () => import('../views/ExportIdea.vue')
+        }
       ]
     },
   ]
