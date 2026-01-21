@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -44,7 +44,13 @@ def get_session_history(session_id: str) -> CustomMongoHistory:
 rag_service = RAGService()
 
 @router.post('/chat/{chat_id}')
-async def send_message_streaming(chat_id: str, request: MessageRequest):
+async def send_message_streaming(
+    chat_id: str,
+    question: str = Form(...),
+    file: Optional[UploadFile] = File(None),
+    model: Optional[str] = Form(DEFAULT_MODEL),
+    custom_prompt: Optional[str] = Form(None)
+):
     """Streaming response endpoint with memory"""
 
     async def generate():
@@ -53,13 +59,13 @@ async def send_message_streaming(chat_id: str, request: MessageRequest):
                 model_name='openai/gpt-5-mini' # request.model
             )
 
-            user_input = request.question
-            if request.filename:
-                user_input = f"{request.question} (Hedef dosya: {request.filename})"
+            user_input = question
+            if file:
+                user_input = f"{question} (Hedef dosya: {file.filename})"
 
             messages = [("user", user_input)]
 
-            if custom_prompt := request.custom_prompt:
+            if custom_prompt:
                 messages.append(("system", custom_prompt))
 
             # LangGraph config - thread_id via memory

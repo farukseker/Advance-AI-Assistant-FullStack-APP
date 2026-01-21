@@ -52,7 +52,7 @@
             </li> 
         </ul> 
         </div>
-    <form @submit="" >
+    <form @submit.prevent="sendMessages">
         <!-- Input label -->
         <label class="input validator w-full rounded-full m-auto px-1"> 
         <input 
@@ -89,6 +89,9 @@
 import { faPlusCircle, faMicrophone, faDotCircle, faPaperPlane, faCircleStop, faDharmachakra } from '@fortawesome/free-solid-svg-icons'
 import axios from 'axios'
 import { onMounted, ref } from 'vue'
+
+const emits = defineEmits(['send'])
+
 
 const query = ref('')
 
@@ -157,29 +160,11 @@ const stopRecording = async () => {
   }
 }
 
-// Optional: send query as text to API
-const sendQuery = async () => {
-  if (!query.value) return
-
-  try {
-    const formData = new FormData()
-    formData.append("query", query.value)
-
-    if (attachment.value) {
-      formData.append("file", attachment.value)
-    }
-
-    const res = await axios.post(
-      "http://localhost:8000/query",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    )
-
-    responseText.value = res.data.text
-  } catch (err) {
-    console.error(err)
-    responseText.value = "Error sending query"
-  }
+const sendMessages = async () => {
+  emits('send', {
+    query: query.value,
+    attachment: attachment.value
+  })
 }
 
 

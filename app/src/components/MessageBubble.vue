@@ -34,9 +34,10 @@ const renderedContent = computed(() => md.render(props.content));
 </script>
 
 <template>
-  <div class="message-row" :class="role">
-    <div class="bubble">
-      <div class="markdown-body" v-html="renderedContent"></div>
+  <div class="chat" :class="role === 'assistant' ? 'chat-start w-full' : 'chat-end'">
+    <div class="chat-bubble w-full" :class="role === 'assistant' ? 'bg-gray-100':'bg-cyan-300'">
+        <div v-if="role === 'assistant'" class="markdown-body" v-html="renderedContent"></div>
+        <pre v-else class="whitespace-pre-wrap">{{ props.content }}</pre>
     </div>
   </div>
 </template>

@@ -1,14 +1,16 @@
 <script setup>
-import { ref, nextTick } from 'vue';
 // Virtual scroller importları (main.js'de global plugin olarak da ekleyebilirsin)
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+
+import { ref, nextTick } from 'vue';
 import MessageBubble from '../components/MessageBubble.vue';
 
 // Mesaj verisi
 const messages = ref([
-  { id: 1, role: 'assistant', content: 'Merhaba, sana nasıl yardımcı olabilirim?' }
-]);
+  { id: 1, role: 'assistant', content: 'Merhaba, sana nasıl yardımcı olabilirim?' },
+  { id: 2, role: 'user', content: 'Yaz kralllll?' }
+])
 
 const scroller = ref(null); // Scroller referansı
 const isStreaming = ref(false);
@@ -55,7 +57,6 @@ const scrollToBottom = () => {
 
 <template>
   <div class="chat-container">
-    
     <DynamicScroller
       ref="scroller"
       :items="messages"

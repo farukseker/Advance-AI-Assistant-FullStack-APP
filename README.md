@@ -5,6 +5,9 @@
 ### Task (Analyze a YouTube video and transcribe its content from text into any language. TTS )
 > cost ![cost](/.previews/yt-video-description-task-usages.png)
 
+
+[**Test Video V1**](/.previews/beta-test-v1.mp4)
+
 Easy customizable chat RAG Doc DB is a lightweight and flexible framework for building AI agents with Retrieval-Augmented Generation (RAG) capabilities.
 It enables seamless document ingestion, vector-based search, and custom tool integration, allowing developers to create domain-aware AI assistants with minimal setup.
 
