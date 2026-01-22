@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
 
 from config import MONGO_URI, OPENROUTER_API_KEY, OPENROUTER_API_HOST
-from tools import rag_search_tool, internet_search_tool, summarize_conversation, youtube_vide_to_into_text_provider
+from tools import rag_search_tool, internet_search_tool, summarize_conversation, youtube_video_to_into_text_provider
 
 mongo_client = MongoClient(MONGO_URI)
 
@@ -15,7 +15,7 @@ checkpointer = MongoDBSaver(
     collection_name="langgraph_checkpoints"
 )
 
-tools = [rag_search_tool, internet_search_tool, summarize_conversation, youtube_vide_to_into_text_provider]
+tools = [rag_search_tool, internet_search_tool, summarize_conversation, youtube_video_to_into_text_provider]
 
 __system_prompt = """Sen yardımsever bir AI asistansın. 
 Görevlerin:

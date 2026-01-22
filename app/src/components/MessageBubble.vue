@@ -4,19 +4,19 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 // İstediğin temayı seçebilirsin: github-dark, atom-one-dark, monokai vb.
 import 'highlight.js/styles/github-dark.css'; 
+import 'github-markdown-css/github-markdown.css'
 
 const props = defineProps({
   content: { type: String, required: true },
   role: { type: String, default: 'user' }
-});
+})
 
-// Markdown-it yapılandırması
 const md = new MarkdownIt({
   html: false,
   linkify: true,
   breaks: true,
   highlight: function (str, lang) {
-    // Dil belirtilmişse ve highlight.js bu dili destekliyorsa
+
     if (lang && hljs.getLanguage(lang)) {
       try {
         return '<pre class="hljs"><code>' +
@@ -25,10 +25,9 @@ const md = new MarkdownIt({
       } catch (__) {}
     }
 
-    // Dil belirtilmemişse veya desteklenmiyorsa otomatik algıla/düz metin bas
     return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
   }
-});
+})
 
 const renderedContent = computed(() => md.render(props.content));
 </script>
@@ -66,13 +65,12 @@ const renderedContent = computed(() => md.render(props.content));
   color: white;
 }
 
-/* Kod blokları için özel iyileştirmeler */
 :deep(.markdown-body pre) {
   margin: 10px 0;
   padding: 14px;
   border-radius: 8px;
   overflow-x: auto;
-  background: #1e1e1e; /* Highlight.js temasıyla uyumlu arka plan */
+  background: #1e1e1e;
 }
 
 :deep(.markdown-body code) {
@@ -80,11 +78,28 @@ const renderedContent = computed(() => md.render(props.content));
   font-size: 0.9em;
 }
 
-/* Satır içi (inline) kodlar için */
 :deep(.markdown-body :not(pre) > code) {
   background-color: rgba(0,0,0,0.1);
   padding: 2px 4px;
   border-radius: 4px;
   color: #e03131;
+}
+
+
+@media (prefers-color-scheme: light) {
+  body {
+    /*
+    --color-canvas-default, copied from 
+    https://github.com/sindresorhus/github-markdown-css/blob/main/github-markdown.css
+    */
+    background-color: #ffffff;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    /* --color-canvas-default */
+    background-color: #0d1117;
+  }
 }
 </style>

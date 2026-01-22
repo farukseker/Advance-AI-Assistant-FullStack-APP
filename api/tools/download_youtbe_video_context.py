@@ -6,7 +6,7 @@ from services import YTDLManager, AudioTranscriber, SRTParser
 yt_manager = YTDLManager()
 
 @tool
-async def youtube_vide_to_into_text_provider(
+async def youtube_video_to_into_text_provider(
         youtube_url: Annotated[str, "provide youtube url, youtube.com, youtu.be"]) -> str:
     """
     When a user gives you a YouTube URL, or when you need content from a YouTube video,
@@ -19,8 +19,6 @@ async def youtube_vide_to_into_text_provider(
             f"YT-DLP failed: {yt_response.get('details')}"
         )
 
-    print(yt_response)
-    print(yt_response.file_suffix)
     if yt_response.file_suffix == ".mp3":
         transcriber = AudioTranscriber()
         return transcriber.transcribe(

@@ -16,6 +16,12 @@ const router = createRouter({
           component: BaseView
         },
         {
+          path:'/chat/:chat_id',
+          name: 'chat',
+          component: () => import('../views/ChatView.vue'),
+          props: true
+        },
+        {
           path:'/export',
           name: 'export',
           component: () => import('../views/ExportIdea.vue')

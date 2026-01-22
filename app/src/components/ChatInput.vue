@@ -1,6 +1,7 @@
 <template>
 
 <div class="flex flex-col gap-2">
+  {{ on_send }}
     <input 
         type="file"
         class="rounded-full transition-all duration-300"
@@ -52,7 +53,7 @@
             </li> 
         </ul> 
         </div>
-    <form @submit.prevent="sendMessages">
+    <form ref="formRef" @submit.prevent="sendMessages">
         <!-- Input label -->
         <label class="input validator w-full rounded-full m-auto px-1"> 
         <input 
@@ -91,9 +92,13 @@ import axios from 'axios'
 import { onMounted, ref } from 'vue'
 
 const emits = defineEmits(['send'])
+const formRef = ref(null)
 
 
 const query = ref('')
+
+const { on_send } = defineProps(['on_send'])
+
 
 
 const addAttachment = ref(false)
@@ -101,7 +106,6 @@ const attachment = ref(null)
 const onFileChange = (e) => {
   attachment.value = e.target.files[0] || null
 }
-// enctype="multipart/form-data"
 
 const responseText = ref('')
 const isRecording = ref(false)
@@ -148,7 +152,7 @@ const stopRecording = async () => {
   formData.append("file", audioBlob, "audio.wav")
 
   try {
-    const res = await axios.post("http://localhost:8000/audio/transcribe", formData, {
+    const res = await axios.post(`${import.meta.env.VITE_API_PATH}/audio/transcribe`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     })
     query.value = query.value + ' ' + res.data.text
@@ -165,6 +169,9 @@ const sendMessages = async () => {
     query: query.value,
     attachment: attachment.value
   })
+  query.value = ''
+  attachment.value = ''
+  formRef.value?.reset()
 }
 
 

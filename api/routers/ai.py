@@ -25,6 +25,7 @@ from ai_base import generate_chat_title
 client = AsyncIOMotorClient(MONGO_URI)
 db = client['chat']
 chats_collection = db['chats']
+history_collection = db['chat_histories']
 
 router = APIRouter(
     prefix="/ai",
@@ -32,34 +33,46 @@ router = APIRouter(
 )
 
 def get_session_history(session_id: str) -> CustomMongoHistory:
-    """Get or create session history"""
+    """Get or create session history :SessionId"""
     return CustomMongoHistory(
         connection_string=MONGO_URI,
         session_id=session_id,
         database_name="chat",
         collection_name="chat_histories"
-    )
 
+    )
 
 rag_service = RAGService()
 
+
 @router.post('/chat/{chat_id}')
 async def send_message_streaming(
-    chat_id: str,
-    question: str = Form(...),
-    file: Optional[UploadFile] = File(None),
-    model: Optional[str] = Form(DEFAULT_MODEL),
-    custom_prompt: Optional[str] = Form(None)
+        chat_id: str,
+        question: str = Form(...),
+        file: Optional[UploadFile] = File(None),
+        model: Optional[str] = Form(DEFAULT_MODEL),
+        custom_prompt: Optional[str] = Form(None)
 ):
     """Streaming response endpoint with memory"""
 
     async def generate():
+        chat_message = ''  # AI yanıtını toplamak için
+
         try:
             agent_executor = base_ai_agent(
-                model_name='openai/gpt-5-mini' # request.model
+                model_name='openai/gpt-5-mini'
             )
 
             user_input = question
+
+            # Kullanıcı mesajını kaydet
+            await history_collection.insert_one({
+                'SessionId': chat_id,
+                'role': 'user',
+                'content': user_input,
+                'created_at': datetime.utcnow()
+            })
+
             if file:
                 user_input = f"{question} (Hedef dosya: {file.filename})"
 
@@ -68,34 +81,38 @@ async def send_message_streaming(
             if custom_prompt:
                 messages.append(("system", custom_prompt))
 
-            # LangGraph config - thread_id via memory
             config = {
                 "configurable": {
                     "thread_id": chat_id
                 }
             }
-            # Stream events - LangGraph message format
+
+            # Stream events
             async for event in agent_executor.astream_events(
-                {"messages": messages},
-                config=config,
-                version="v2"
+                    {"messages": messages},
+                    config=config,
+                    version="v2"
             ):
                 kind = event["event"]
 
                 if kind == "on_chat_model_stream":
                     content = event["data"]["chunk"].content
                     if content:
+                        # İçeriği biriktir
+                        chat_message += content
+                        # Client'a gönder
                         yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
 
                 elif kind == "on_tool_start":
                     tool_name = event["name"]
                     tool_input = event["data"]["input"]
-                    print('tool start: ', tool_name, tool_input)
+                    print(f'Tool başladı: {tool_name}', tool_input)
                     yield f"data: {json.dumps({'type': 'tool_start', 'tool': tool_name, 'input': tool_input}, ensure_ascii=False)}\n\n"
 
                 elif kind == "on_tool_end":
                     tool_name = event["name"]
                     tool_output = event["data"]["output"]
+
                     if isinstance(tool_output, ToolMessage):
                         payload = {
                             "tool": tool_output.name,
@@ -107,7 +124,18 @@ async def send_message_streaming(
 
                     yield f"data: {json.dumps({'type': 'tool_end', 'content': payload, 'tool': tool_name}, ensure_ascii=False)}\n\n"
 
-            # Update chat metadata
+            # Stream bitti, şimdi AI mesajını kaydet
+            if chat_message:  # Boş değilse kaydet
+                await history_collection.insert_one({
+                    'SessionId': chat_id,
+                    'role': 'ai',
+                    'content': chat_message.strip(),
+                    'created_at': datetime.utcnow()
+                })
+
+                print(f"AI mesajı kaydedildi (uzunluk: {len(chat_message)}): {chat_message[:100]}...")
+
+            # Chat metadata güncelle
             await chats_collection.update_one(
                 {"_id": ObjectId(chat_id)},
                 {
@@ -116,11 +144,27 @@ async def send_message_streaming(
                 }
             )
 
+            # İşlem tamamlandı sinyali
             yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
 
         except Exception as e:
             import traceback
-            traceback.print_exc()
+            error_detail = traceback.format_exc()
+            print(f"Hata oluştu: {error_detail}")
+
+            # Hata durumunda bile mesajı kaydetmeyi dene
+            if chat_message:
+                try:
+                    await history_collection.insert_one({
+                        'SessionId': chat_id,
+                        'role': 'ai',
+                        'content': chat_message.strip(),
+                        'created_at': datetime.utcnow(),
+                        'error': True
+                    })
+                except:
+                    pass
+
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
@@ -132,8 +176,6 @@ async def send_message_streaming(
             "X-Accel-Buffering": "no"
         }
     )
-
-
 
 @router.get('/models')
 async def get_models():
@@ -175,24 +217,30 @@ async def create_chat(request: CreateChatRequest):
         raise HTTPException(status_code=500, detail=f"Chat oluşturma hatası: {str(e)}")
 
 
-@router.get('/chat/{chat_id}/history')
+@router.get("/chat/{chat_id}/history")
 async def get_history(chat_id: str, limit: int = 50):
-    """Get chat history for UI"""
     try:
-        history = get_session_history(chat_id)
-        ui_history = filter_messages_for_ui(history.messages)
+        cursor = (
+            history_collection
+            .find({"SessionId": chat_id})
+            .sort("created_at", 1)
+            .limit(limit)
+        )
+        history = await cursor.to_list(length=limit)
+        for msg in history:
+            msg["_id"] = str(msg["_id"])
+            msg["created_at"] = msg["created_at"].isoformat()
 
-        # Get chat metadata
-        chat_doc = await chats_collection.find_one({"_id": chat_id})
-
-        return JSONResponse(content={
+        return {
             "chat_id": chat_id,
-            "title": chat_doc.get("title", "Chat") if chat_doc else "Chat",
-            "messages": ui_history[-limit:],
-            "total_messages": len(ui_history)
-        })
+            "history": history
+        }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Geçmiş alma hatası: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Geçmiş alma hatası: {str(e)}"
+        )
 
 
 @router.delete('/chat/{chat_id}')
@@ -238,9 +286,14 @@ async def clear_history(chat_id: str):
 async def get_user_chats(user_id: str, limit: int = 100):
     """Get all chats for a user"""
     try:
-        cursor = chats_collection.find({"user_id": user_id}).sort("updated_at", -1).limit(limit)
-        chats = await cursor.to_list(length=limit)
+        cursor = (
+            chats_collection
+            .find({"user_id": user_id})
+            .sort("created_at", -1)
+            .limit(limit)
+        )
 
+        chats = await cursor.to_list(length=limit)
         for chat in chats:
             chat["chat_id"] = str(chat.pop("_id"))
             chat["created_at"] = chat["created_at"].isoformat()

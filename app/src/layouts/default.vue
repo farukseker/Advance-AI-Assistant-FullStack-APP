@@ -13,10 +13,10 @@
             <Icon v-else :icon="faAngleRight" />
         </button>
         </div>
-
+        
         <aside
-        class="fixed md:relative top-0 left-0 z-10 h-screen 
-                transition-all duration-300 overflow-hidden"
+        class="fixed md:relative top-0 left-0 z-10 h-screen
+                transition-all duration-300"
         :class="toggle_menu
             ? 'w-screen md:w-84 translate-x-0'
             : 'w-0 -translate-x-full md:w-0 z-10'"
@@ -37,11 +37,21 @@
                     </details> 
                 </li>
                 <li></li>
-                <li> 
+                <li > 
                     <details open> 
                         <summary>History</summary> 
-                        <ul> 
-                            <li><a class="bg-accent">PyTorch</a></li> 
+                        <ul class="overflow-auto h-[60vh]"> 
+                            <li v-for="chat in chats">
+                                <a 
+                                    :class="$router.currentRoute.value.params.chat_id === chat.chat_id ? 'bg-accent':''"
+                                    @click="$router.push({
+                                        name: 'chat',
+                                        params: {
+                                        chat_id: chat.chat_id
+                                    }
+                                    })"
+                                >{{chat.title}}</a>
+                            </li> 
                         </ul> 
                     </details> 
                 </li>
@@ -61,12 +71,29 @@ import { RouterView } from 'vue-router'
 import { faEllipsis, faBars, faChevronLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons'
 import { useThemeStore } from '@/stores/theme'
 import { Notifications } from '@kyvg/vue3-notification'
+import { ref } from 'vue'
+import axios from 'axios'
+
 
 const themeStore = useThemeStore()
-import { ref } from 'vue'
 const toggle_menu = ref(true)    
+
+const chats = ref() 
+const load_chats = async () => {
+    let r = await axios.get(`${import.meta.env.VITE_API_PATH}/ai/chats`, {
+        params: {
+            user_id: 'pars',
+            limit: 100
+        }
+    })
+    chats.value = r.data.chats
+} 
+
+
+
 onMounted(() => {
   themeStore.sync_theme()
+  load_chats()
 })
 </script>
 
