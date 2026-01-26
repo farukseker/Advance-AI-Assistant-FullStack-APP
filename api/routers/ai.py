@@ -14,11 +14,6 @@ from ai_base import base_ai_agent
 # Config
 from config import MONGO_URI, OPENROUTER_API_KEY, OPENROUTER_API_HOST, DEFAULT_MODEL
 
-# utils
-from utils import filter_messages_for_ui
-
-from tools import rag_search_tool, internet_search_tool, summarize_conversation
-
 from ai_base import generate_chat_title
 
 # MongoDB Setup
@@ -57,6 +52,7 @@ async def send_message_streaming(
 
     async def generate():
         chat_message = ''  # AI yanıtını toplamak için
+        chat_used = None
 
         try:
             agent_executor = base_ai_agent(
@@ -65,7 +61,6 @@ async def send_message_streaming(
 
             user_input = question
 
-            # Kullanıcı mesajını kaydet
             await history_collection.insert_one({
                 'SessionId': chat_id,
                 'role': 'user',
@@ -94,13 +89,11 @@ async def send_message_streaming(
                     version="v2"
             ):
                 kind = event["event"]
-
-                if kind == "on_chat_model_stream":
+                print(kind)
+                if kind in ("on_chat_model_stream", "on_llm_stream"):
                     content = event["data"]["chunk"].content
                     if content:
-                        # İçeriği biriktir
                         chat_message += content
-                        # Client'a gönder
                         yield f"data: {json.dumps({'type': 'token', 'content': content}, ensure_ascii=False)}\n\n"
 
                 elif kind == "on_tool_start":
@@ -124,13 +117,22 @@ async def send_message_streaming(
 
                     yield f"data: {json.dumps({'type': 'tool_end', 'content': payload, 'tool': tool_name}, ensure_ascii=False)}\n\n"
 
-            # Stream bitti, şimdi AI mesajını kaydet
-            if chat_message:  # Boş değilse kaydet
+                elif kind == "on_chat_model_end":
+                    output = event.get("data", {}).get("output")
+
+                    if output and hasattr(output, "usage_metadata"):
+                        token_usage = output.usage_metadata
+                        chat_used = token_usage
+
+                        yield f"data: {json.dumps({'type': 'token_usage', 'data': token_usage}, ensure_ascii=False)}\n\n"
+
+            if chat_message:
                 await history_collection.insert_one({
                     'SessionId': chat_id,
                     'role': 'ai',
                     'content': chat_message.strip(),
-                    'created_at': datetime.utcnow()
+                    'created_at': datetime.utcnow(),
+                    'used': chat_used
                 })
 
                 print(f"AI mesajı kaydedildi (uzunluk: {len(chat_message)}): {chat_message[:100]}...")
@@ -145,7 +147,7 @@ async def send_message_streaming(
             )
 
             # İşlem tamamlandı sinyali
-            yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'metadata': chat_used}, ensure_ascii=False)}\n\n"
 
         except Exception as e:
             import traceback

@@ -19,3 +19,33 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongo_user
       MONGO_INITDB_ROOT_PASSWORD: mongo_password
+
+  alarik:
+    image: ghcr.io/achtungsoftware/alarik:latest
+    restart: unless-stopped
+    ports:
+      - "400:8080"
+    environment:
+      - API_BASE_URL=http://localhost:400
+      - CONSOLE_BASE_URL=http://localhost:401
+      - ADMIN_USERNAME=alarik
+      - ADMIN_PASSWORD=alarik
+      - JWT=YOUR_SECURE_JWT_KEY
+      - ALLOW_ACCOUNT_CREATION=false
+    volumes:
+      - alarik-storage:/app/Storage
+
+  console:
+    image: ghcr.io/achtungsoftware/alarik-console:latest
+    restart: unless-stopped
+    ports:
+      - "401:3000"
+    environment:
+      - NUXT_PUBLIC_API_BASE_URL=http://localhost:400
+      - NUXT_PUBLIC_CONSOLE_BASE_URL=http://localhost:401
+      - NUXT_PUBLIC_ALLOW_ACCOUNT_CREATION=false
+    depends_on:
+      - alarik
+
+volumes:
+  alarik-storage:
