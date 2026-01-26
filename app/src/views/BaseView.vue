@@ -23,26 +23,31 @@ const swap_attachment = useLocalStorage('swap_attachment', null)
 const on_send = ref(false)
 
 const sendQuery = async ({ query, attachment }) => {
-  const response = await axios.post(
-    `${import.meta.env.VITE_API_PATH}/ai/create-chat`,
-    {
-        message: query,
+  on_send.value = true
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_PATH}/ai/create-chat`,
+      {
+          message: query,
+      }
+    )
+    
+    if (response.status === 200){
+      swap_message.value = query
+      swap_message_id.value=response.data.chat_id
+      swap_message_title.value=response.data.title
+      swap_attachment.value=attachment
     }
-  )
-  
-  if (response.status === 200){
-    swap_message.value = query
-    swap_message_id.value=response.data.chat_id
-    swap_message_title.value=response.data.title
-    swap_attachment.value=attachment
-  }
 
-  router.push({
-    name: 'chat',
-    params: {
-      chat_id: response.data.chat_id
-    }
-  })
+    router.push({
+      name: 'chat',
+      params: {
+        chat_id: response.data.chat_id
+      }
+    })
+  } finally {
+    on_send.value = false
+  }
 }
 
 </script>

@@ -11,7 +11,8 @@ Text:
 
 async def generate_chat_title(text: str) -> str:
     llm_title = ChatOpenAI(
-        model="openai/gpt-oss-20b",
+        # model="openai/gpt-oss-20b",
+        model="google/gemini-2.5-flash-lite",
         temperature=0.4,
         base_url=OPENROUTER_API_HOST,
         api_key=OPENROUTER_API_KEY,

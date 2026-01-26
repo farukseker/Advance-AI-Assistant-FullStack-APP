@@ -1,0 +1,125 @@
+@reference 'tailwindcss'
+
+.message-row { display: flex; margin-bottom: 15px; width: 100%; }
+.message-row.user { justify-content: flex-end; }
+.message-row.assistant { justify-content: flex-start; }
+
+.bubble {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+}
+
+.assistant .bubble {
+  background-color: #f7f7f8;
+  color: #2d2d2d;
+  border: 1px solid #e5e5e5;
+}
+
+.user .bubble {
+  background-color: #007bff;
+  color: white;
+}
+
+:deep(.markdown-body pre) {
+  margin: 10px 0;
+  padding: 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+  background: #1e1e1e;
+}
+
+:deep(.markdown-body code) {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+:deep(.markdown-body :not(pre) > code) {
+  background-color: rgba(255, 255, 255, 0.76);
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #e03131;
+}
+
+
+
+@layer components {
+  .markdown-body {
+    @apply text-base text-slate-900 dark:text-slate-800 leading-relaxed font-mono;
+  }
+
+  .markdown-body h1 {
+    @apply text-3xl font-bold mt-8 mb-4;
+  }
+
+  .markdown-body h2 {
+    @apply text-2xl font-semibold mt-6 mb-3;
+  }
+
+  .markdown-body h3 {
+    @apply text-xl font-semibold mt-5 mb-2;
+  }
+
+  .markdown-body p {
+    @apply mb-4;
+  }
+
+  .markdown-body a {
+    @apply text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:opacity-80;
+  }
+
+  .markdown-body ul {
+    @apply list-disc pl-6 mb-4;
+  }
+
+  .markdown-body ol {
+    @apply list-decimal pl-6 mb-4;
+  }
+
+  .markdown-body li {
+    @apply mb-1;
+  }
+
+  .markdown-body blockquote {
+    @apply border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400 my-4;
+  }
+
+  .markdown-body code {
+    @apply px-1.5 py-0.5 rounded text-sm text-white font-mono;
+  }
+
+  .markdown-body pre {
+    @apply bg-slate-900 rounded-lg p-4 overflow-x-auto my-4;
+  }
+
+  .chat .markdown-body pre code {
+    @apply p-0 text-sm;
+  }
+
+  .markdown-body hr {
+    @apply my-8 border-slate-300 dark:border-slate-700;
+  }
+
+  .markdown-body table {
+    @apply w-full border-collapse my-6;
+  }
+
+  .markdown-body th,
+  .markdown-body td {
+    @apply border border-slate-300  px-3 py-2 text-left;
+  }
+
+  .markdown-body th {
+    @apply bg-slate-400 font-semibold;
+  }
+
+    .chat-footer {
+    @apply opacity-0 translate-y-2 transition-all duration-200 ease-out pointer-events-none;
+    }
+
+    .chat:hover .chat-footer {
+    @apply opacity-100 translate-y-0 pointer-events-auto;
+    }
+}

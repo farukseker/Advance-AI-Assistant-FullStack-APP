@@ -6,4 +6,11 @@ export default {
     themes: ["dark"], // only dark theme
     darkTheme: "dark",
   },
+  theme: {
+    extend: {
+      fontFamily: {
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+    },
+  },
 }

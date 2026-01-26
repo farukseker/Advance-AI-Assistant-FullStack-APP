@@ -62,21 +62,21 @@
             v-model="query" 
             required 
             placeholder="!q query !y youtube , type ur message here"
+            :disabled="on_send"
         > 
-
         <button class="btn btn-sm btn-circle" type="button"> 
-
             <span v-if="!isRecording" @click="startRecording" :class="onAudioProceses ? 'text-primary animate-spin':''"> 
-            <Icon v-if="onAudioProceses" :icon="faDharmachakra" />
-            <Icon v-else :icon="faMicrophone" /> 
+              <Icon v-if="onAudioProceses" :icon="faDharmachakra" />
+              <Icon v-else :icon="faMicrophone" /> 
             </span> 
             <span v-else @click="stopRecording" class="text-primary animate-pulse delay-75"> 
-            <Icon :icon="faDotCircle" /> 
+              <Icon :icon="faDotCircle" /> 
             </span> 
         </button> 
         
         <button class="btn btn-sm btn-circle btn-accent" type="submit"> 
-            <Icon class="pt-0.5" :icon="faPaperPlane" /> 
+            <Icon v-if="!on_send" class="pt-0.5" :icon="faPaperPlane" /> 
+            <Icon v-else class="text-primary animate-spin delay-75 text-2xl" :icon="faCircleStop" />
         </button> 
         </label>
     </form>

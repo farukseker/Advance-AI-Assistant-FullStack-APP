@@ -1,14 +1,21 @@
 <script setup>
-import { computed } from 'vue';
-import MarkdownIt from 'markdown-it';
-import hljs from 'highlight.js';
+import { computed, ref } from 'vue'
+import MarkdownIt from 'markdown-it'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.css'
+import '@/assets/MessageBubble.css'
+
 // İstediğin temayı seçebilirsin: github-dark, atom-one-dark, monokai vb.
-import 'highlight.js/styles/github-dark.css'; 
-import 'github-markdown-css/github-markdown.css'
+// import 'github-markdown-css/github-markdown.css'
+import { getReadableText } from "@/utils/getReadableText";
+import { faVoicemail, faCopy, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+
+const show_more = ref(false)
 
 const props = defineProps({
   content: { type: String, required: true },
-  role: { type: String, default: 'user' }
+  role: { type: String, default: 'user' },
+  used: { type: Object, default: null }
 })
 
 const md = new MarkdownIt({
@@ -29,77 +36,46 @@ const md = new MarkdownIt({
   }
 })
 
-const renderedContent = computed(() => md.render(props.content));
+const renderedContent = computed(() => md.render(props.content))
 </script>
 
 <template>
   <div class="chat" :class="role === 'assistant' ? 'chat-start w-full' : 'chat-end'">
-    <div class="chat-bubble w-full" :class="role === 'assistant' ? 'bg-gray-100':'bg-cyan-300'">
+    <div class="chat-header">
+      Obi-Wan Kenobi
+      <time class="text-xs opacity-50">2 hours ago</time>
+    </div>
+    <div class="chat-bubble shadow-md w-full" :class="role === 'assistant' ? 'bg-gray-100':'bg-cyan-300'">
         <div v-if="role === 'assistant'" class="markdown-body" v-html="renderedContent"></div>
-        <pre v-else class="whitespace-pre-wrap">{{ props.content }}</pre>
+        <pre v-else class="whitespace-pre-wrap">{{ show_more ? props?.content:props?.content?.slice(0, 100) }} <strong v-if="props?.content?.length > 100" class="underline" @click="show_more=!show_more">...</strong></pre>
+    </div>
+    <div class="chat-footer rounded pt-2">
+      <div class="tooltip" v-if="props?.used">
+        <div class="tooltip-content p-2">
+            <code class="text-xs">
+              input: {{ props?.used?.input_tokens }}
+              <br>
+              output: {{ props?.used?.output_tokens }}
+              <br>
+              total: {{ props?.used?.total_tokens }}
+              <br>
+              reasoning: {{ props?.used?.reasoning  }}
+              <br>
+              input_details:
+              <br>
+               - cache_read: {{ props?.used?.input_token_details?.cache_read }}
+            </code>
+          </div>
+          <button class="btn btn-sm btn-circle btn-neutral">
+            <Icon :icon="faLayerGroup" />
+          </button>
+      </div>
+      <button class="btn btn-sm btn-circle btn-neutral">
+        <Icon :icon="faCopy" />
+      </button>
+      <button class="btn btn-sm btn-circle btn-neutral">
+        <Icon :icon="faVoicemail" />
+      </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.message-row { display: flex; margin-bottom: 15px; width: 100%; }
-.message-row.user { justify-content: flex-end; }
-.message-row.assistant { justify-content: flex-start; }
-
-.bubble {
-  max-width: 85%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  line-height: 1.6;
-  font-family: 'Inter', sans-serif;
-}
-
-.assistant .bubble {
-  background-color: #f7f7f8;
-  color: #2d2d2d;
-  border: 1px solid #e5e5e5;
-}
-
-.user .bubble {
-  background-color: #007bff;
-  color: white;
-}
-
-:deep(.markdown-body pre) {
-  margin: 10px 0;
-  padding: 14px;
-  border-radius: 8px;
-  overflow-x: auto;
-  background: #1e1e1e;
-}
-
-:deep(.markdown-body code) {
-  font-family: 'Fira Code', 'Courier New', monospace;
-  font-size: 0.9em;
-}
-
-:deep(.markdown-body :not(pre) > code) {
-  background-color: rgba(0,0,0,0.1);
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: #e03131;
-}
-
-
-@media (prefers-color-scheme: light) {
-  body {
-    /*
-    --color-canvas-default, copied from 
-    https://github.com/sindresorhus/github-markdown-css/blob/main/github-markdown.css
-    */
-    background-color: #ffffff;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    /* --color-canvas-default */
-    background-color: #0d1117;
-  }
-}
-</style>

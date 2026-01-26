@@ -24,8 +24,13 @@
             <hr class="my-2">
             <ul 
                 tabindex="0"
-                class="menu bg-base-100 rounded-box p-2 shadow-lg mb-2 w-full pt-16"
+                class="menu bg-base-100 rounded-box p-2 shadow-lg mb-2 w-full pt-24"
             > 
+                <li>
+                    <button class="btn btn-sm btn-primary" @click="$router.push({name:'home'})">
+                        New Chat
+                    </button>
+                </li>
                 <li>
                     <details open> 
                         <summary>Prompts</summary> 
@@ -41,7 +46,7 @@
                     <details open> 
                         <summary>History</summary> 
                         <ul class="overflow-auto h-[60vh]"> 
-                            <li v-for="chat in chats">
+                            <li v-if="chat_list" v-for="chat in chat_list">
                                 <a 
                                     :class="$router.currentRoute.value.params.chat_id === chat.chat_id ? 'bg-accent':''"
                                     @click="$router.push({
@@ -73,27 +78,21 @@ import { useThemeStore } from '@/stores/theme'
 import { Notifications } from '@kyvg/vue3-notification'
 import { ref } from 'vue'
 import axios from 'axios'
+import { storeToRefs } from "pinia";
+import { useChatStore } from '@/stores/ChatStore'
+
+
+const chat_store = useChatStore()
+const { chat_list } = storeToRefs(chat_store)
 
 
 const themeStore = useThemeStore()
 const toggle_menu = ref(true)    
 
-const chats = ref() 
-const load_chats = async () => {
-    let r = await axios.get(`${import.meta.env.VITE_API_PATH}/ai/chats`, {
-        params: {
-            user_id: 'pars',
-            limit: 100
-        }
-    })
-    chats.value = r.data.chats
-} 
-
-
 
 onMounted(() => {
   themeStore.sync_theme()
-  load_chats()
+  chat_store.load_chat_list()
 })
 </script>
 
