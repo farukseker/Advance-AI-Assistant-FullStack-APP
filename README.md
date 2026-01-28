@@ -1,6 +1,6 @@
 # Easy customizable chat RAG Doc DB is a lightweight and flexible framework
 
-> chat prototype example ![chat](/.previews/chat.png)
+> chat prototype example ![chat](/.previews/chat-ui.png)
 
 ### Task (Analyze a YouTube video and transcribe its content from text into any language. TTS )
 > cost ![cost](/.previews/yt-video-description-task-usages.png)
@@ -34,11 +34,11 @@ Phase 2 – Agent & Tooling
 
 🔄 Tool call streaming & tracing
 
-⏳ Agent memory & context control
+✅ Agent memory & context control
 
 Phase 3 – Developer Experience
 
-⏳ Web UI for chat & document management
+✅ Web UI for chat & document management
 
 ⏳ Config-based agent & tool definitions
 

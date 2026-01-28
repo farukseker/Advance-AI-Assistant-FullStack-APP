@@ -1,7 +1,6 @@
 <template>
 
 <div class="flex flex-col gap-2">
-  {{ on_send }}
     <input 
         type="file"
         class="rounded-full transition-all duration-300"

@@ -18,7 +18,15 @@
           :size-dependencies="[item.content]" 
           :data-index="index"
         >
-          <MessageBubble :content="item.content" :role="item.role" :used="item.hasOwnProperty('used') ? item.used : null" />
+          <MessageBubble 
+            :key="item.id"
+            :content="item.content"
+            :role="item.role"
+            :used="item.hasOwnProperty('used') ? item.used : null"
+            :historyId="item.id"
+            :attachments="item.hasOwnProperty('attachments') ? item.attachments:null"
+            @update:attachments="attachments = $event"
+          />
         </DynamicScrollerItem>
       </template>
     </DynamicScroller>
@@ -58,6 +66,7 @@ const load_chat_history = async () => {
         role: m.role === 'ai' ? 'assistant' : m.role,
         content: m.content,
         created_at: m.created_at,
+        attachments: m.hasOwnProperty('attachments') ? m.attachments:null,
         used: m.hasOwnProperty('used') ? m.used : null
     }))
 }

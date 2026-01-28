@@ -19,17 +19,34 @@
                 transition-all duration-300"
         :class="toggle_menu
             ? 'w-screen md:w-84 translate-x-0'
-            : 'w-0 -translate-x-full md:w-0 z-10'"
+            : 'w-0 -translate-x-full pointer-events-none overflow-hidden'"
         >
             <hr class="my-2">
             <ul 
                 tabindex="0"
-                class="menu bg-base-100 rounded-box p-2 shadow-lg mb-2 w-full pt-24"
+                class="menu bg-base-100 p-2 mb-2 w-full pt-24 border-secondary-content border-b"
             > 
                 <li>
                     <button class="btn btn-sm btn-primary" @click="$router.push({name:'home'})">
                         New Chat
                     </button>
+                </li>
+                <li>
+                    <details open> 
+                        <summary>Scripts</summary> 
+                        <ul> 
+                            <li>
+                       
+                                <RouterLink 
+                                :class="$router.currentRoute.value.name === 'audio-create' ? 'bg-accent':''"
+                                :to="{
+                                    name:'audio-create'
+                                }">
+                                Text to speach
+                                </RouterLink>
+                            </li>
+                        </ul> 
+                    </details> 
                 </li>
                 <li>
                     <details open> 
@@ -45,7 +62,7 @@
                 <li > 
                     <details open> 
                         <summary>History</summary> 
-                        <ul class="overflow-auto h-[60vh]"> 
+                        <ul class="overflow-auto h-[50vh]"> 
                             <li v-if="chat_list" v-for="chat in chat_list">
                                 <a 
                                     :class="$router.currentRoute.value.params.chat_id === chat.chat_id ? 'bg-accent':''"
@@ -61,6 +78,9 @@
                     </details> 
                 </li>
             </ul>
+            <ul class="fixed bottom-0 left-0">
+                pars
+            </ul>
         </aside>
         <article class="w-full h-screen">
             <Notifications position="bottom right" :max="5" />
@@ -71,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { faEllipsis, faBars, faChevronLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons'

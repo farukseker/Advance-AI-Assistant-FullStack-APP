@@ -1,4 +1,5 @@
 import shutil
+import time
 from pathlib import Path
 from services import AudioTranscriber
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -6,6 +7,8 @@ from fastapi.responses import StreamingResponse
 from models import CreateAudioModel
 from io import BytesIO
 import edge_tts
+from s3_handler import get_s3_handler
+from hashlib import sha256
 
 
 router = APIRouter(
@@ -34,6 +37,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
 @router.post("/create")
 async def create_audio(payload: CreateAudioModel):
+    h = sha256()
     communicate = edge_tts.Communicate(
         **payload.to_dict()
     )
@@ -45,14 +49,19 @@ async def create_audio(payload: CreateAudioModel):
             audio.write(chunk["data"])
 
     audio.seek(0)
+    h.update(audio.read())
+    s3_key = f"voices/{h.hexdigest()}.wav"
 
-    return StreamingResponse(
-        audio,
-        media_type="audio/wav",
-        headers={
-            "Content-Disposition": "attachment; filename=audio.mp3"
-        }
-    )
+    audio.seek(0)
+    s3 = get_s3_handler()
+    s3.upload_file(s3_key=s3_key, content_type="audio/wav", file_content=audio.read())
+
+    ref = s3.generate_presigned_url(s3_key=s3_key, expiration=3600)
+
+    return {
+        "audio_s3_key": s3_key,
+        "audio_ref": ref
+    }
 
 
 @router.get("/list")

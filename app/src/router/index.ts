@@ -16,6 +16,18 @@ const router = createRouter({
           component: BaseView
         },
         {
+          path:'/settings',
+          name: 'settings',
+          component: () => import('../views/SettingsView.vue'),
+          props: true
+        },
+        {
+          path:'/audio-create',
+          name: 'audio-create',
+          component: () => import('../views/AudioCreateView.vue'),
+          props: true
+        },
+        {
           path:'/chat/:chat_id',
           name: 'chat',
           component: () => import('../views/ChatView.vue'),
@@ -29,6 +41,21 @@ const router = createRouter({
       ]
     },
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const audios = document.querySelectorAll('audio')
+
+  audios.forEach(audio => {
+    try {
+      audio.pause()
+      audio.currentTime = 0
+      audio.src = ''        // important: buffer reset
+      audio.load()
+    } catch (_) {}
+  })
+
+  next()
 })
 
 export default router

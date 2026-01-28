@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, List, Annotated
-from models import MessageRequest, CreateChatRequest
+from models import MessageRequest, CreateChatRequest, MergeAudioRequest
 import json
 from datetime import datetime
 from services import RAGService, CustomMongoHistory
@@ -89,7 +89,7 @@ async def send_message_streaming(
                     version="v2"
             ):
                 kind = event["event"]
-                print(kind)
+
                 if kind in ("on_chat_model_stream", "on_llm_stream"):
                     content = event["data"]["chunk"].content
                     if content:
@@ -218,10 +218,14 @@ async def create_chat(request: CreateChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat oluşturma hatası: {str(e)}")
 
+from s3_handler import S3Handler
+
 
 @router.get("/chat/{chat_id}/history")
 async def get_history(chat_id: str, limit: int = 50):
     try:
+        s3 = S3Handler()
+
         cursor = (
             history_collection
             .find({"SessionId": chat_id})
@@ -232,6 +236,15 @@ async def get_history(chat_id: str, limit: int = 50):
         for msg in history:
             msg["_id"] = str(msg["_id"])
             msg["created_at"] = msg["created_at"].isoformat()
+
+            if msg.get('attachments', {}).get("audio", None):
+                msg["attachments"]["audio"] = s3.generate_presigned_url(msg["attachments"]["audio"], 3600)
+
+            if msg.get('attachments', {}).get("images", None):
+                msg["attachments"]["images"] = [
+                    s3.generate_presigned_url(image, 3600)
+                    for image in msg["attachments"]["images"]
+                ]
 
         return {
             "chat_id": chat_id,
@@ -320,5 +333,33 @@ async def update_chat_title(chat_id: str, title: str):
             "chat_id": chat_id,
             "title": title
         })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Güncelleme hatası: {str(e)}")
+
+
+@router.patch('/chat/{chat_id}/merge/content/audio')
+async def update_chat_content(payload: MergeAudioRequest):
+    """set chat content to audio/mp3"""
+    try:
+        await history_collection.update_one(
+            {"_id": ObjectId(payload.history_id)},
+            {
+                "$set":
+                {
+                    "updated_at": datetime.utcnow(),
+                    "attachments": {
+                        "audio": payload.content_s3_key
+                        # "images" : []
+                    }
+                }
+            }
+        )
+
+        return JSONResponse(content={
+            "message": "content has merge",
+            "history_id": payload.history_id,
+            "content": payload.content_s3_key
+        })
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Güncelleme hatası: {str(e)}")
