@@ -16,6 +16,8 @@ rag_service = RAGService()
 
 
 # ============= Request Models =============
+class DocumentRemoveRequest(BaseModel):
+    filename: str
 
 class QuestionRequest(BaseModel):
     question: str
@@ -26,7 +28,6 @@ class QuestionRequest(BaseModel):
 class QuestionWithFileRequest(BaseModel):
     question: str
     top_k: int = 3
-
 
 # ============= Endpoints =============
 
@@ -93,11 +94,33 @@ async def ask_with_file(
 async def list_files():
     try:
         files = rag_service.list_stored_files()
-
         return JSONResponse(content={
             "files": files,
-            "total": len(files)
+            # "total": len(files)
         })
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
+
+@router.get("/search")
+async def search(q: str, file_name: Optional[str] = None):
+    try:
+        results = rag_service.search_in_database(
+            query=q,
+            filename=file_name
+        )
+        return JSONResponse(content={
+            "results": results,
+        })
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
+
+
+@router.delete("/remove-file")
+async def remove_file(payload: DocumentRemoveRequest):
+    rag_service.vector_db.delete_by_source(payload.filename)
+    return {
+        "status": "deleted",
+        "filename": payload.filename
+    }

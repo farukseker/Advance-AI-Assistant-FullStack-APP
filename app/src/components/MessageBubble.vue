@@ -7,15 +7,14 @@ import '@/assets/MessageBubble.css'
 import axios from 'axios'
 import AudioPlayer from '@/components/AudioPlayer.vue'
 
-// İstediğin temayı seçebilirsin: github-dark, atom-one-dark, monokai vb.
-// import 'github-markdown-css/github-markdown.css'
-import { getReadableText } from "@/utils/getReadableText";
+import { getReadableText } from "@/utils/getReadableText"
+import { copyTextToBoard } from "@/utils/copyTextToClipBoard"
 import { faVoicemail, faCopy, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 
 const show_more = ref(false)
 
 const props = defineProps({
-  historyId: { type: String, required: true },
+  historyId: { type: [String, Number], required: true },
   content: { type: String, required: true },
   role: { type: String, default: 'user' },
   used: { type: Object, default: null },
@@ -110,7 +109,7 @@ const send_create_voice_recored = async () => {
             <Icon :icon="faLayerGroup" />
           </button>
       </div>
-      <button class="btn btn-sm btn-circle btn-neutral">
+      <button @click="copyTextToBoard(props.content)" class="btn btn-sm btn-circle btn-neutral">
         <Icon :icon="faCopy" />
       </button>
       <button @click="send_create_voice_recored" class="btn btn-sm btn-circle btn-neutral" :class="on_create_voice_recored ? 'animate-pulse delay-75 text-primary': ''">

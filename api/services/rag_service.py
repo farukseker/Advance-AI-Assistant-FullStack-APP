@@ -17,16 +17,44 @@ class DocumentProcessor:
     def __init__(self, ingestor: MultiSourceIngestor):
         self.ingestor = ingestor
         self.splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
+            chunk_size=800,
+            chunk_overlap=100,
         )
 
-    def process_file(
-            self,
-            content: bytes,
-            filename: str
-    ) -> Tuple[List[str], List[List[float]]]:
+    def stream_pdf_chunks(
+        self,
+        content: bytes,
+        filename: str,
+    ):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(content)
+            pdf_path = tmp.name
 
+        try:
+            loader = PyPDFLoader(pdf_path)
+
+            for page_doc in loader.lazy_load():
+                if not page_doc.page_content.strip():
+                    continue
+
+                chunks = self.splitter.split_documents([page_doc])
+                texts = [c.page_content for c in chunks if c.page_content.strip()]
+
+                if not texts:
+                    continue
+
+                embeddings = self.ingestor.embed_texts(texts)
+
+                yield texts, embeddings, page_doc.metadata.get("page")
+
+        finally:
+            Path(pdf_path).unlink(missing_ok=True)
+
+    def process_small_file(
+        self,
+        content: bytes,
+        filename: str,
+    ) -> Tuple[List[str], List[List[float]]]:
         ext = Path(filename).suffix.lower()
 
         if ext == ".pdf":
@@ -36,9 +64,6 @@ class DocumentProcessor:
         else:
             raise ValueError(f"Unsupported file type: {ext}")
 
-        if not any(d.page_content.strip() for d in docs):
-            raise ValueError("No text could be extracted from the file")
-
         chunks = [
             d.page_content
             for d in self.splitter.split_documents(docs)
@@ -47,22 +72,6 @@ class DocumentProcessor:
 
         embeddings = self.ingestor.embed_texts(chunks)
         return chunks, embeddings
-
-    def _load_pdf(self, content: bytes) -> List[Document]:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-
-        try:
-            loader = PyPDFLoader(tmp_path)
-            return loader.load()
-        finally:
-            Path(tmp_path).unlink(missing_ok=True)
-
-    def _load_text(self, content: bytes, filename: str) -> List[Document]:
-        text = content.decode("utf-8", errors="ignore")
-        return [Document(page_content=text, metadata={"source": filename})]
-
 
 class VectorSearchEngine:
     def __init__(self, ingestor: MultiSourceIngestor):
@@ -167,10 +176,43 @@ class RAGService:
     def process_and_store(
             self,
             content: bytes,
-            filename: str
+            filename: str,
     ) -> Dict[str, any]:
 
-        chunks, embeddings = self.doc_processor.process_file(content, filename)
+        ext = Path(filename).suffix.lower()
+        total_chunks = 0
+
+        if ext == ".pdf":
+            for texts, embeddings, page in self.doc_processor.stream_pdf_chunks(
+                    content, filename
+            ):
+                ids = [str(uuid.uuid4()) for _ in texts]
+                payloads = [
+                    {
+                        "text": t,
+                        "source": filename,
+                        "page": page,
+                    }
+                    for t in texts
+                ]
+
+                self.vector_db.upsert(
+                    ids=ids,
+                    vectors=embeddings,
+                    payloads=payloads,
+                )
+
+                total_chunks += len(texts)
+
+            return {
+                "status": "success",
+                "filename": filename,
+                "chunks_processed": total_chunks,
+                "saved_to_db": True,
+                "streaming": True,
+            }
+
+        chunks, embeddings = self.doc_processor.process_small_file(content, filename)
 
         ids = [str(uuid.uuid4()) for _ in chunks]
         payloads = [
@@ -178,7 +220,7 @@ class RAGService:
                 "text": chunk,
                 "source": filename,
                 "chunk_index": i,
-                "total_chunks": len(chunks)
+                "total_chunks": len(chunks),
             }
             for i, chunk in enumerate(chunks)
         ]
@@ -186,15 +228,15 @@ class RAGService:
         self.vector_db.upsert(
             ids=ids,
             vectors=embeddings,
-            payloads=payloads
+            payloads=payloads,
         )
 
         return {
             "status": "success",
             "filename": filename,
             "chunks_processed": len(chunks),
-            "embedding_dim": len(embeddings[0]),
-            "saved_to_db": True
+            "saved_to_db": True,
+            "streaming": False,
         }
 
     def ask_with_temporary_file(
@@ -280,6 +322,21 @@ class RAGService:
             # Silme hatası olursa log tut ama işlemi durdurma
             print(f"Warning: Failed to cleanup temp data: {e}")
 
+    def search_in_database(self, query, top_k: Optional[int] = 3, filename: Optional[str] = None) -> Dict[str, any]:
+        result = self.search_engine.search_in_database(
+            query=query,
+            vector_db=self.vector_db,
+            top_k=top_k,
+            filename=filename
+        )
+
+        return {
+            "question": query,
+            "source": result["sources"],
+            "contexts": result["contexts"],
+            "contexts_used": list(result["contexts"]),
+        }
+
     def ask_from_database(
             self,
             question: str,
@@ -304,6 +361,7 @@ class RAGService:
             "question": question,
             "answer": answer,
             "sources": result["sources"],
+            "contexts": result["contexts"],
             "contexts_used": len(result["contexts"])
         }
 

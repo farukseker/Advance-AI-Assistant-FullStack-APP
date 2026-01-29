@@ -36,7 +36,16 @@
                         <summary>Scripts</summary> 
                         <ul> 
                             <li>
-                       
+                                
+                                <RouterLink 
+                                :class="$router.currentRoute.value.name === 'document-loader' ? 'bg-accent':''"
+                                :to="{
+                                    name:'document-loader'
+                                }">
+                                Documents
+                                </RouterLink>
+                            </li>
+                            <li>
                                 <RouterLink 
                                 :class="$router.currentRoute.value.name === 'audio-create' ? 'bg-accent':''"
                                 :to="{

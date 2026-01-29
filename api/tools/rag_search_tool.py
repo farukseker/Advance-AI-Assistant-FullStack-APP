@@ -26,7 +26,6 @@ def rag_search_tool(query: str, filename: str = None):
     try:
         rag_service = RAGService()
 
-        # Context şişmesin diye top_k burada sabitlenebilir veya LLM'den istenebilir
         print(f"🛠️ RAG Tool Çalıştı: {query} (Dosya: {filename})")
 
         result = rag_service.ask_from_database(
@@ -44,7 +43,7 @@ def rag_search_tool(query: str, filename: str = None):
         {json.dumps(result['sources'], ensure_ascii=False, indent=2)}
 
         Related Text Chunks:
-        {chr(10).join(f"- {chunk}" for chunk in result['chunks'])}
+        {chr(10).join(f"- {chunk}" for chunk in result['contexts'])}
         """
         return formatted_result
 

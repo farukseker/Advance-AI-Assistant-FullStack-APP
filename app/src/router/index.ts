@@ -24,7 +24,13 @@ const router = createRouter({
         {
           path:'/audio-create',
           name: 'audio-create',
-          component: () => import('../views/AudioCreateView.vue'),
+          component: () => import('../views/scripts/AudioCreateView.vue'),
+          props: true
+        },
+        {
+          path:'/documents',
+          name: 'document-loader',
+          component: () => import('../views/scripts/DocumentLoaderView.vue'),
           props: true
         },
         {
