@@ -16,7 +16,7 @@
                 </div>
             </fieldset>
         </form>
-        <audio v-if="audio_ref" :src="audio_ref" controls autoplay />
+        <AudioPlayer  v-if="audio_ref" :audio-src="audio_ref" controls autoplay  />
     </article>
 </section>
 </template>
@@ -24,6 +24,7 @@
 <script setup>
 import axios from 'axios'
 import { onMounted, ref } from 'vue'
+import AudioPlayer from '@/components/AudioPlayer.vue'
 
 
 const text = ref('')
@@ -50,8 +51,6 @@ const speachers_list = ref([
     'en-US-MichelleNeural',
     'en-US-RogerNeural',
     'en-US-SteffanNeural',
-    'az-AZ-BabekNeural',
-    'az-AZ-BanuNeural'
 ])
 const get_speachers_list = async () => {
     let sl = await axios.get(`${import.meta.env.VITE_API_PATH}/audio/list`)

@@ -63,6 +63,8 @@ async def create_audio(payload: CreateAudioModel):
         "audio_ref": ref
     }
 
+# custom_voices = db['custom_voices']
+
 
 @router.get("/list")
 async def get_audio_list():

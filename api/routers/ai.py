@@ -19,6 +19,7 @@ from ai_base import generate_chat_title
 # MongoDB Setup
 client = AsyncIOMotorClient(MONGO_URI)
 db = client['chat']
+
 chats_collection = db['chats']
 history_collection = db['chat_histories']
 

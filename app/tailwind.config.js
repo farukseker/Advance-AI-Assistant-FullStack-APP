@@ -2,6 +2,7 @@
 export default {
   content: ["./src/**/*.{html,js,ts,jsx,tsx}"],
   plugins: [require("daisyui")],
+  darkMode: ["selector", "[data-theme*='dark']"],
   daisyui: {
     themes: ["dark"], // only dark theme
     darkTheme: "dark",

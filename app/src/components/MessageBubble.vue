@@ -5,6 +5,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import '@/assets/MessageBubble.css'
 import axios from 'axios'
+import AudioPlayer from '@/components/AudioPlayer.vue'
 
 // İstediğin temayı seçebilirsin: github-dark, atom-one-dark, monokai vb.
 // import 'github-markdown-css/github-markdown.css'
@@ -76,16 +77,15 @@ const send_create_voice_recored = async () => {
       {{role === 'assistant' ? 'GPT-5.2':'' }}
       <!--time class="text-xs opacity-50">2 hours ago</time-->
     </div>
-    <div class="chat-bubble shadow-md w-full" :class="role === 'assistant' ? 'bg-gray-100':'bg-cyan-300'">
+    <div class="chat-bubble shadow-md w-full" :class="role === 'assistant' ? 'bg-base-100 dark:bg-base-300':'bg-cyan-300 dark:bg-cyan-900  '">
         <div v-if="role === 'assistant'" ref="assistant_content_ref" class="markdown-body" v-html="renderedContent"></div>
         <pre v-else class="whitespace-pre-wrap">{{ show_more ? props?.content:props?.content?.slice(0, 100) }} <strong v-if="props?.content?.length > 100" class="underline" @click="show_more=!show_more">...</strong></pre>
         <div v-if="on_create_voice_recored" class="skeleton bg-primary-content h-4 w-full"></div>
         <div v-if="attachments">
-          <audio
-            :key="`${props.historyId}-audio`"
+          <AudioPlayer
             v-if="attachments?.audio"
-            :src="attachments.audio"
-            controls
+            :key="`${props.historyId}-audio`"
+            :audio-src="attachments.audio"
           />
         </div>
     </div>

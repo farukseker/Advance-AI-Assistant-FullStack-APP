@@ -1,4 +1,7 @@
-@reference 'tailwindcss'
+@reference 'tailwindcss';
+@plugin 'daisyui';
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 
 .message-row { display: flex; margin-bottom: 15px; width: 100%; }
 .message-row.user { justify-content: flex-end; }
