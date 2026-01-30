@@ -18,7 +18,7 @@
         class="fixed md:relative top-0 left-0 z-10 h-screen
                 transition-all duration-300"
         :class="toggle_menu
-            ? 'w-screen md:w-84 translate-x-0'
+            ? 'w-screen md:w-94 translate-x-0'
             : 'w-0 -translate-x-full pointer-events-none overflow-hidden'"
         >
             <hr class="my-2">
@@ -71,17 +71,22 @@
                 <li > 
                     <details open> 
                         <summary>History</summary> 
-                        <ul class="overflow-auto h-[50vh]"> 
-                            <li v-if="chat_list" v-for="chat in chat_list">
+                        <ul class="overflow-auto h-[50vh] gap-2 flex flex-col"> 
+                            <li v-if="chat_list" v-for="chat in chat_list" class="grid grid-cols-12 p-2 rounded m-0 w-full" :class="$router.currentRoute.value.params.chat_id === chat.chat_id ? 'bg-accent shadow':''">
                                 <a 
-                                    :class="$router.currentRoute.value.params.chat_id === chat.chat_id ? 'bg-accent':''"
+                                class="col-span-11 p-0"
                                     @click="$router.push({
                                         name: 'chat',
                                         params: {
                                         chat_id: chat.chat_id
                                     }
                                     })"
-                                >{{chat.title}}</a>
+                                >
+                                {{ chat.title }}
+                                </a>
+                                <p class="col-span-1 p-0 flex justify-center" @click="removeChat(chat.chat_id)" v-bind:key="`chat_remover_id_${chat.chat_id}`">
+                                    <Icon claas="text-error-content m-auto" :icon="faTrash" />
+                                </p>
                             </li> 
                         </ul> 
                     </details> 
@@ -100,10 +105,9 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
 import { onMounted } from 'vue'
-import { RouterView } from 'vue-router'
-import { faEllipsis, faBars, faChevronLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons'
+import { RouterView, useRouter, RouterLink } from 'vue-router'
+import { faEllipsis, faBars, faChevronLeft, faAngleRight, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useThemeStore } from '@/stores/theme'
 import { Notifications } from '@kyvg/vue3-notification'
 import { ref } from 'vue'
@@ -112,6 +116,7 @@ import { storeToRefs } from "pinia";
 import { useChatStore } from '@/stores/ChatStore'
 
 
+const router = useRouter()
 const chat_store = useChatStore()
 const { chat_list } = storeToRefs(chat_store)
 
@@ -124,6 +129,16 @@ onMounted(() => {
   themeStore.sync_theme()
   chat_store.load_chat_list()
 })
+
+const removeChat = async (chatId: string): Promise<void> => {
+  await axios.delete(`${import.meta.env.VITE_API_PATH}/ai/chat/${chatId}`)
+  chat_store.load_chat_list()
+  if (router.currentRoute.value.params.chat_id ===  chatId) {
+    router.push({
+        name: "home"
+    })
+  }
+}
 </script>
 
 

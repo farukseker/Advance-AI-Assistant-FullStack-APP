@@ -50,8 +50,9 @@ const send_create_voice_recored = async () => {
   try {
     let ar = await axios.post(`${import.meta.env.VITE_API_PATH}/audio/create`, {
       "text": getReadableText(assistant_content_ref),
-      "voice": 'tr-TR-AhmetNeural',
-      "rate": 1,
+      // "voice": 'tr-TR-AhmetNeural',
+      "voice": 'en-US-AndrewNeural',
+      "rate": 10,
       "volume": 20,
       "pitch": 10,
     })

@@ -243,9 +243,10 @@ onMounted(async () => {
         swap_attachment.value = null
         swap_message.value = null
         swap_message_id.value = null
-    } else {
-        await load_chat_history()
-    }
+    } 
+    // else {
+    //     await load_chat_history()
+    // }
 })
 </script>
 

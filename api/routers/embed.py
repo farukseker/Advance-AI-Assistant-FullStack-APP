@@ -104,6 +104,11 @@ async def list_files():
 
 @router.get("/search")
 async def search(q: str, file_name: Optional[str] = None):
+    if q is not None and len(q) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Search term '{q}' is too short"
+        )
     try:
         results = rag_service.search_in_database(
             query=q,

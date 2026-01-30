@@ -259,25 +259,6 @@ async def get_history(chat_id: str, limit: int = 50):
         )
 
 
-@router.delete('/chat/{chat_id}')
-async def delete_chat(chat_id: str):
-    """Delete chat and its history"""
-    try:
-        # Clear message history
-        history = get_session_history(chat_id)
-        history.clear()
-
-        # Delete chat document
-        await chats_collection.delete_one({"_id": chat_id})
-
-        return JSONResponse(content={
-            "message": "Sohbet silindi",
-            "chat_id": chat_id
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Silme hatası: {str(e)}")
-
-
 @router.delete('/chat/{chat_id}/clear')
 async def clear_history(chat_id: str):
     """Clear chat history only (keep chat document)"""
@@ -367,14 +348,14 @@ async def update_chat_content(payload: MergeAudioRequest):
 
 
 @router.delete("/chat/{chat_id}")
-async def remove_chat(chat_id: str):
+async def remove_chat(chat_id: str | int):
     try:
         # Remove in-memory/session history
         history = get_session_history(chat_id)
         history.clear()
 
         # Delete chat document from DB
-        result = await chats_collection.delete_one({"_id": chat_id})
+        result = await chats_collection.delete_one({"_id": ObjectId(chat_id)})
 
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Chat not found")
