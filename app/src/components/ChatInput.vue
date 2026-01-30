@@ -60,7 +60,7 @@
             class="ps-10"
             v-model="query" 
             required 
-            placeholder="!q query !y youtube , type ur message here"
+            placeholder="Type your message here"
             :disabled="on_send"
         > 
         <button class="btn btn-sm btn-circle" type="button"> 

@@ -364,3 +364,30 @@ async def update_chat_content(payload: MergeAudioRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Güncelleme hatası: {str(e)}")
+
+
+@router.delete("/chat/{chat_id}")
+async def remove_chat(chat_id: str):
+    try:
+        # Remove in-memory/session history
+        history = get_session_history(chat_id)
+        history.clear()
+
+        # Delete chat document from DB
+        result = await chats_collection.delete_one({"_id": chat_id})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Chat not found")
+
+        return JSONResponse(content={
+            "message": "Chat successfully removed",
+            "chat_id": chat_id
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Remove chat error: {str(e)}"
+        )

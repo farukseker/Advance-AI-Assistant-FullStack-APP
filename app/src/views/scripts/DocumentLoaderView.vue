@@ -22,7 +22,7 @@
                         <th>1</th>
                         <td>{{ document.filename }}</td>
                         <td>{{ document.document_count }}</td>
-                        <td class="cursor-pointer text-error" @click="removeDocument(document.filename)">Delte</td>
+                        <td class="cursor-pointer text-error" @click="removeDocument(document.filename)">Delete</td>
                     </tr>
                 </tbody>
             </table>
