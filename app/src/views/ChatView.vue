@@ -40,13 +40,16 @@
 </template>
 <script setup>
 import axios from 'axios'
-import ChatInput from '@/components/ChatInput.vue';
 import { ref, nextTick , onMounted, watch } from 'vue';
+import ChatInput from '@/components/ChatInput.vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import MessageBubble from '../components/MessageBubble.vue';
 import { useLocalStorage } from '@vueuse/core'
 import { useChatStore } from '@/stores/ChatStore'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 
 const chat_store = useChatStore()
@@ -56,7 +59,7 @@ const swap_message = useLocalStorage('swap_message', null)
 const swap_message_id = useLocalStorage('swap_message_id', null)
 const swap_attachment = useLocalStorage('swap_attachment', null)
 
-const { chat_id } = defineProps(['chat_id'])
+const chat_id = computed(() => route.params.chat_id)
 
 
 const load_chat_history = async () => {
@@ -244,9 +247,9 @@ onMounted(async () => {
         swap_message.value = null
         swap_message_id.value = null
     } 
-    // else {
-    //     await load_chat_history()
-    // }
+    else {
+        await load_chat_history()
+    }
 })
 </script>
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import { ref } from 'vue'
-import type { Chat } from '@/types/chat'
+import type { ChatList, Chat } from '@/types/chat'
 
 
 export const useChatStore = defineStore('chat-store', () => {

@@ -1,16 +1,18 @@
+
+<style>
+@import '@/assets/MessageBubble.css';
+@import 'highlight.js/styles/github-dark.css';
+</style>
+
 <script setup>
 import { computed, ref } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
-import '@/assets/MessageBubble.css'
 import axios from 'axios'
 import AudioPlayer from '@/components/AudioPlayer.vue'
-
 import { getReadableText } from "@/utils/getReadableText"
 import { copyTextToBoard } from "@/utils/copyTextToClipBoard"
 import { faVoicemail, faCopy, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-
 const show_more = ref(false)
 
 const props = defineProps({
