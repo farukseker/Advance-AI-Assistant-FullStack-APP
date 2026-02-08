@@ -19,7 +19,7 @@ async def youtube_video_to_into_text_provider(
             f"YT-DLP failed: {yt_response.get('details')}"
         )
 
-    if yt_response.file_suffix == ".mp3":
+    if hasattr(yt_response, 'file_suffix') and getattr(yt_response, 'file_suffix') == ".mp3":
         transcriber = AudioTranscriber()
         return transcriber.transcribe(
             audio_path=yt_response.path,

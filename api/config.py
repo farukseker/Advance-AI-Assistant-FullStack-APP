@@ -1,6 +1,6 @@
 from dotenv import dotenv_values
 
-config = dotenv_values(".env")
+config = dotenv_values("../.env")
 
 OPENROUTER_API_KEY = config.get("OPENROUTER_API_KEY")
 OPENROUTER_API_HOST = config.get("OPENROUTER_API_HOST")
